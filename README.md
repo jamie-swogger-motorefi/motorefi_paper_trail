@@ -1,6 +1,9 @@
 :warning::warning:
+
 THIS IS A COPY OF PAPERTRAIL 14.0
+
 This is being used for migrating to a new version of PaperTrail only
+
 :warning::warning:
 
 # PaperTrail
