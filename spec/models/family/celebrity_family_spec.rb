@@ -8,8 +8,8 @@ module Family
       it "works on an STI model" do
         described_class.create!
         result = described_class.
-          joins(:versions).
-          select("families.id, max(versions.event) as event").
+          joins(:motorefi_versions).
+          select("families.id, max(motorefi_versions.event) as event").
           group("families.id").
           first
         expect(result.event).to eq("create")
@@ -22,7 +22,7 @@ module Family
           name: "Carter",
           path_to_stardom: "Mexican radio"
         )
-        v = carter.versions.last
+        v = carter.motorefi_versions.last
         expect(v[:event]).to eq("create")
         expect(v[:item_subtype]).to eq("Family::CelebrityFamily")
       end
@@ -42,12 +42,12 @@ module Family
             children_attributes: { id: child1.id, name: "Jay Jackson" }
           )
 
-          expect(parent.versions.count).to eq(2) # A create and an update
-          parent.versions.each do |parent_version|
+          expect(parent.motorefi_versions.count).to eq(2) # A create and an update
+          parent.motorefi_versions.each do |parent_version|
             expect(parent_version.item_type).to eq("Family::Family")
             expect(parent_version.item_subtype).to eq("Family::CelebrityFamily")
           end
-          expect(parent.versions[1].reify).to be_a(::Family::CelebrityFamily)
+          expect(parent.motorefi_versions[1].reify).to be_a(::Family::CelebrityFamily)
         end
       end
 
@@ -62,8 +62,8 @@ module Family
           parent.children.build(name: "Pugsley")
           parent.save!
 
-          expect(parent.versions.count).to eq(2)
-          parent.versions.each do |parent_version|
+          expect(parent.motorefi_versions.count).to eq(2)
+          parent.motorefi_versions.each do |parent_version|
             expect(parent_version.item_type).to eq("Family::Family")
             expect(parent_version.item_subtype).to eq("Family::CelebrityFamily")
           end
@@ -82,8 +82,8 @@ module Family
           parent.grandsons.build(name: "Rodney")
           parent.save!
 
-          expect(parent.versions.count).to eq(2)
-          parent.versions.each do |parent_version|
+          expect(parent.motorefi_versions.count).to eq(2)
+          parent.motorefi_versions.each do |parent_version|
             expect(parent_version.item_type).to eq("Family::Family")
             expect(parent_version.item_subtype).to eq("Family::CelebrityFamily")
           end
@@ -103,8 +103,8 @@ module Family
             mentee_attributes: { id: parent.mentee.id, name: "Al Shean" }
           )
 
-          expect(parent.versions.count).to eq(2)
-          parent.versions.each do |parent_version|
+          expect(parent.motorefi_versions.count).to eq(2)
+          parent.motorefi_versions.each do |parent_version|
             expect(parent_version.item_type).to eq("Family::Family")
             expect(parent_version.item_subtype).to eq("Family::CelebrityFamily")
           end
@@ -119,7 +119,7 @@ module Family
           path_to_stardom: "Mexican radio"
         )
         carter.update(path_to_stardom: "Johnny")
-        v = carter.versions.last
+        v = carter.motorefi_versions.last
         expect(v[:event]).to eq("update")
         expect(v[:item_type]).to eq("Family::Family")
         expect(v[:item_subtype]).to eq("Family::CelebrityFamily")

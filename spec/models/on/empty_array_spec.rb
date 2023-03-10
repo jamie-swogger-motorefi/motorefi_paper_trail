@@ -8,16 +8,16 @@ module On
     describe "#create" do
       it "does not create any version records" do
         record = described_class.create(name: "Alice")
-        expect(record.versions.length).to(eq(0))
+        expect(record.motorefi_versions.length).to(eq(0))
       end
     end
 
-    describe ".paper_trail.update_columns" do
+    describe ".motorefi_paper_trail.update_columns" do
       it "creates a version record" do
         widget = Widget.create
-        assert_equal 1, widget.versions.length
-        widget.paper_trail.update_columns(name: "Bugle")
-        assert_equal 2, widget.versions.length
+        assert_equal 1, widget.motorefi_versions.length
+        widget.motorefi_paper_trail.update_columns(name: "Bugle")
+        assert_equal 2, widget.motorefi_versions.length
       end
     end
 
@@ -25,7 +25,7 @@ module On
       it "does not create any version records" do
         record = described_class.create(name: "Alice")
         record.update(name: "blah")
-        expect(record.versions.length).to(eq(0))
+        expect(record.motorefi_versions.length).to(eq(0))
       end
     end
   end

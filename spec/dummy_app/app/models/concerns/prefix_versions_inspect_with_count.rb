@@ -2,7 +2,7 @@
 
 module PrefixVersionsInspectWithCount
   def inspect
-    "#{length} versions:\n" +
+    "#{length} motorefi_versions:\n" +
       super
   end
 end

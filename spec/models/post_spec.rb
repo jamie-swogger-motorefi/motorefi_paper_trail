@@ -9,27 +9,27 @@ RSpec.describe Post, type: :model, versioning: true do
     expect(PostVersion.count).to(eq(1))
     post.update(content: "Some new content")
     expect(PostVersion.count).to(eq(2))
-    expect(PaperTrail::Version.count).to(eq(0))
+    expect(MotorefiPaperTrail::Version.count).to(eq(0))
   end
 
   context "with the first version" do
     it "have the correct index" do
       post = described_class.create
-      version = post.versions.first
+      version = post.motorefi_versions.first
       expect(version.index).to(eq(0))
     end
   end
 
-  it "have versions of the custom class" do
+  it "have motorefi_versions of the custom class" do
     post = described_class.create
-    expect(post.versions.first.class.name).to(eq("PostVersion"))
+    expect(post.motorefi_versions.first.class.name).to(eq("PostVersion"))
   end
 
   describe "#changeset" do
     it "returns nil because the object_changes column doesn't exist" do
       post = described_class.create
       post.update(content: "Some new content")
-      expect(post.versions.last.changeset).to(be_nil)
+      expect(post.motorefi_versions.last.changeset).to(be_nil)
     end
   end
 end

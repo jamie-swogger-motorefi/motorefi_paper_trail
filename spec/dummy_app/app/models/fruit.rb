@@ -3,6 +3,6 @@
 # See also `Vegetable` which uses `JsonbVersion`.
 class Fruit < ApplicationRecord
   if ENV["DB"] == "postgres"
-    has_paper_trail versions: { class_name: "JsonVersion" }
+    has_motorefi_paper_trail motorefi_versions: { class_name: "JsonVersion" }
   end
 end

@@ -5,24 +5,24 @@ require_dependency "on/create"
 
 module On
   RSpec.describe Create, type: :model, versioning: true do
-    describe "#versions" do
+    describe "#motorefi_versions" do
       it "only have a version for the create event" do
         record = described_class.create(name: "Alice")
         record.update(name: "blah")
         record.destroy
-        expect(record.versions.length).to(eq(1))
-        expect(record.versions.last.event).to(eq("create"))
+        expect(record.motorefi_versions.length).to(eq(1))
+        expect(record.motorefi_versions.last.event).to(eq("create"))
       end
     end
 
-    describe "#paper_trail_event" do
+    describe "#motorefi_paper_trail_event" do
       it "rembembers the custom event name" do
         record = described_class.new
-        record.paper_trail_event = "banana"
+        record.motorefi_paper_trail_event = "banana"
         record.update(name: "blah")
         record.destroy
-        expect(record.versions.length).to(eq(1))
-        expect(record.versions.last.event).to(eq("banana"))
+        expect(record.motorefi_versions.length).to(eq(1))
+        expect(record.motorefi_versions.last.event).to(eq("banana"))
       end
     end
 
@@ -30,7 +30,7 @@ module On
       it "does not create a version" do
         record = described_class.create(name: "Alice")
         expect { record.touch }.not_to(
-          change { record.versions.count }
+          change { record.motorefi_versions.count }
         )
       end
     end

@@ -12,23 +12,23 @@ RSpec.describe(FooWidget, versioning: true) do
     end
 
     it "reify with the correct type" do
-      expect(PaperTrail::Version.last.previous).to(eq(foo.versions.first))
-      expect(PaperTrail::Version.last.next).to(be_nil)
+      expect(MotorefiPaperTrail::Version.last.previous).to(eq(foo.motorefi_versions.first))
+      expect(MotorefiPaperTrail::Version.last.next).to(be_nil)
     end
 
     it "returns the correct originator" do
-      PaperTrail.request.whodunnit = "Ben"
+      MotorefiPaperTrail.request.whodunnit = "Ben"
       foo.update_attribute(:name, "Geoffrey")
-      expect(foo.paper_trail.originator).to(eq(PaperTrail.request.whodunnit))
+      expect(foo.motorefi_paper_trail.originator).to(eq(MotorefiPaperTrail.request.whodunnit))
     end
 
     context "when destroyed" do
       before { foo.destroy }
 
       it "reify with the correct type" do
-        assert_kind_of(described_class, foo.versions.last.reify)
-        expect(PaperTrail::Version.last.previous).to(eq(foo.versions[1]))
-        expect(PaperTrail::Version.last.next).to(be_nil)
+        assert_kind_of(described_class, foo.motorefi_versions.last.reify)
+        expect(MotorefiPaperTrail::Version.last.previous).to(eq(foo.motorefi_versions[1]))
+        expect(MotorefiPaperTrail::Version.last.next).to(be_nil)
       end
     end
   end

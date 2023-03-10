@@ -6,7 +6,7 @@ RSpec.describe Wotsit, versioning: true do
   it "update! records timestamps" do
     wotsit = described_class.create!(name: "wotsit")
     wotsit.update!(name: "changed")
-    reified = wotsit.versions.last.reify
+    reified = wotsit.motorefi_versions.last.reify
     expect(reified.created_at).not_to(be_nil)
     expect(reified.updated_at).not_to(be_nil)
   end

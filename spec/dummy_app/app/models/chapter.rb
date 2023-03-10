@@ -7,5 +7,5 @@ class Chapter < ApplicationRecord
   has_many :quotations, dependent: :destroy
   has_many :citations, through: :quotations
 
-  has_paper_trail
+  has_motorefi_paper_trail
 end

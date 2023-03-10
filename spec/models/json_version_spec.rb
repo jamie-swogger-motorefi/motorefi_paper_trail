@@ -7,7 +7,7 @@ require "spec_helper"
 if JsonVersion.table_exists?
   RSpec.describe JsonVersion, type: :model, versioning: true do
     it "includes the VersionConcern module" do
-      expect(described_class).to include(PaperTrail::VersionConcern)
+      expect(described_class).to include(MotorefiPaperTrail::VersionConcern)
     end
 
     describe "#where_object" do
@@ -17,7 +17,7 @@ if JsonVersion.table_exists?
         f = Fruit.create(name: "Bobby")
         expect(
           f.
-            versions.
+            motorefi_versions.
             where_object(name: "Robert'; DROP TABLE Students;--").
             count
         ).to eq(0)
@@ -31,13 +31,13 @@ if JsonVersion.table_exists?
       end
 
       context "with valid arguments", versioning: true do
-        it "locates versions according to their `object` contents" do
+        it "locates motorefi_versions according to their `object` contents" do
           fruit = Fruit.create!(name: "apple")
-          expect(fruit.versions.length).to eq(1)
+          expect(fruit.motorefi_versions.length).to eq(1)
           fruit.update!(name: "banana", color: "aqua")
-          expect(fruit.versions.length).to eq(2)
+          expect(fruit.motorefi_versions.length).to eq(2)
           fruit.update!(name: "coconut", color: "black")
-          expect(fruit.versions.length).to eq(3)
+          expect(fruit.motorefi_versions.length).to eq(3)
           where_apple = described_class.where_object(name: "apple")
           expect(where_apple.to_sql).to eq(
             <<-SQL.squish
@@ -46,10 +46,10 @@ if JsonVersion.table_exists?
               WHERE (object->>'name' = 'apple')
             SQL
           )
-          expect(where_apple).to eq([fruit.versions[1]])
+          expect(where_apple).to eq([fruit.motorefi_versions[1]])
           expect(
             described_class.where_object(color: "aqua")
-          ).to eq([fruit.versions[2]])
+          ).to eq([fruit.motorefi_versions[2]])
         end
       end
     end
@@ -59,7 +59,7 @@ if JsonVersion.table_exists?
         f = Fruit.create(name: "Bobby")
         expect(
           f.
-            versions.
+            motorefi_versions.
             where_object_changes(name: "Robert'; DROP TABLE Students;--").
             count
         ).to eq(0)
@@ -73,11 +73,11 @@ if JsonVersion.table_exists?
       end
 
       context "with valid arguments", versioning: true do
-        it "finds versions according to their `object_changes` contents" do
+        it "finds motorefi_versions according to their `object_changes` contents" do
           fruit = Fruit.create!(name: "apple")
           fruit.update!(name: "banana", color: "red")
           fruit.update!(name: "coconut", color: "green")
-          where_apple = fruit.versions.where_object_changes(name: "apple")
+          where_apple = fruit.motorefi_versions.where_object_changes(name: "apple")
           expect(where_apple.to_sql.squish).to eq(
             <<-SQL.squish
               SELECT "json_versions".*
@@ -91,17 +91,17 @@ if JsonVersion.table_exists?
                 "json_versions"."id" ASC
             SQL
           )
-          expect(where_apple).to match_array(fruit.versions[0..1])
+          expect(where_apple).to match_array(fruit.motorefi_versions[0..1])
           expect(
-            fruit.versions.where_object_changes(color: "red")
-          ).to match_array(fruit.versions[1..2])
+            fruit.motorefi_versions.where_object_changes(color: "red")
+          ).to match_array(fruit.motorefi_versions[1..2])
         end
 
-        it "finds versions with multiple attributes changed" do
+        it "finds motorefi_versions with multiple attributes changed" do
           fruit = Fruit.create!(name: "apple")
           fruit.update!(name: "banana", color: "red")
           fruit.update!(name: "coconut", color: "green")
-          where_red_apple = fruit.versions.where_object_changes(color: "red", name: "apple")
+          where_red_apple = fruit.motorefi_versions.where_object_changes(color: "red", name: "apple")
           expect(where_red_apple.to_sql.squish).to eq(
             <<-SQL.squish
               SELECT "json_versions".*
@@ -116,7 +116,7 @@ if JsonVersion.table_exists?
                 "json_versions"."id" ASC
             SQL
           )
-          expect(where_red_apple).to match_array([fruit.versions[1]])
+          expect(where_red_apple).to match_array([fruit.motorefi_versions[1]])
         end
       end
     end

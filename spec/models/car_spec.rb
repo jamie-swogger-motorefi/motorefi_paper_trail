@@ -9,7 +9,7 @@ RSpec.describe Car, type: :model do
     it "has the expected keys (see issue 738)" do
       car = described_class.create!(name: "Alice")
       car.update(name: "Bob")
-      assert_includes car.versions.last.changeset.keys, "name"
+      assert_includes car.motorefi_versions.last.changeset.keys, "name"
     end
   end
 
@@ -18,17 +18,17 @@ RSpec.describe Car, type: :model do
       car = described_class.create name: "Pinto", color: "green"
       car.update color: "yellow"
       car.update color: "brown"
-      expect(car.versions.second.reify.color).to eq("yellow")
+      expect(car.motorefi_versions.second.reify.color).to eq("yellow")
     end
 
     it "reifies attributes that once were attributes but now just attr_accessor" do
       car = described_class.create name: "Pinto", color: "green"
       car.update color: "yellow"
-      changes = PaperTrail::Serializers::YAML.load(car.versions.last.attributes["object"])
+      changes = MotorefiPaperTrail::Serializers::YAML.load(car.motorefi_versions.last.attributes["object"])
       changes[:top_speed] = 80
-      car.versions.first.update object: changes.to_yaml
+      car.motorefi_versions.first.update object: changes.to_yaml
       car.reload
-      expect(car.versions.first.reify.top_speed).to eq(80)
+      expect(car.motorefi_versions.first.reify.top_speed).to eq(80)
     end
   end
 end

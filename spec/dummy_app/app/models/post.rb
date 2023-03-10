@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 class Post < ApplicationRecord
-  has_paper_trail versions: { class_name: "PostVersion" }
+  has_motorefi_paper_trail motorefi_versions: { class_name: "PostVersion" }
 end

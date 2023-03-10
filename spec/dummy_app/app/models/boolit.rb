@@ -2,5 +2,5 @@
 
 class Boolit < ApplicationRecord
   default_scope { where(scoped: true) }
-  has_paper_trail
+  has_motorefi_paper_trail
 end

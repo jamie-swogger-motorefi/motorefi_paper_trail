@@ -66,7 +66,7 @@ require "action_controller/railtie"
 
 # Then, gems are loaded. In a conventional Rails app, this would be done with
 # by the `Bundler.require` in `config/application.rb`.
-require "paper_trail"
+require "motorefi_paper_trail"
 require "ffaker"
 require "rspec/rails"
 require "rails-controller-testing"
@@ -76,12 +76,12 @@ require "rails-controller-testing"
 require File.expand_path("dummy_app/config/environment", __dir__)
 
 # Now that AR has a connection pool, we can migrate the database.
-require_relative "support/paper_trail_spec_migrator"
+require_relative "support/motorefi_paper_trail_spec_migrator"
 ::PaperTrailSpecMigrator.new.migrate
 
 # This final section reselmbles what might be dummy_app's spec_helper, if it
 # had one.
-require "paper_trail/frameworks/rspec"
+require "motorefi_paper_trail/frameworks/rspec"
 RSpec.configure do |config|
   config.fixture_path = nil # we use factories, not fixtures
   config.use_transactional_fixtures = true

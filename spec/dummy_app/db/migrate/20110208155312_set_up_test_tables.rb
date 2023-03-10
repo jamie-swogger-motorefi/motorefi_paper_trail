@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Parts of this migration must be kept in sync with
-# `lib/generators/paper_trail/templates/create_versions.rb`
+# `lib/generators/motorefi_paper_trail/templates/create_versions.rb`
 #
 # Starting with AR 5.1, we must specify which version of AR we are using.
 # I tried using `const_get` but I got a `NameError`, then I learned about
@@ -71,7 +71,7 @@ class SetUpTestTables < ::ActiveRecord::Migration::Current
       end
     end
 
-    create_table :versions, **versions_table_options do |t|
+    create_table :motorefi_versions, **versions_table_options do |t|
       t.string   :item_type, **item_type_options(null: false)
       t.bigint   :item_id, null: false
       t.string   :item_subtype, **item_type_options(null: true)
@@ -93,7 +93,7 @@ class SetUpTestTables < ::ActiveRecord::Migration::Current
       t.string :ip
       t.string :user_agent
     end
-    add_index :versions, %i[item_type item_id]
+    add_index :motorefi_versions, %i[item_type item_id]
 
     create_table :post_versions, force: true do |t|
       t.string   :item_type, null: false
@@ -109,7 +109,7 @@ class SetUpTestTables < ::ActiveRecord::Migration::Current
     end
     add_index :post_versions, %i[item_type item_id]
 
-    # Uses custom versions table `no_object_versions`.
+    # Uses custom motorefi_versions table `no_object_versions`.
     create_table :no_objects, force: true do |t|
       t.string :letter, null: false, limit: 1
       t.timestamps null: false, limit: 6

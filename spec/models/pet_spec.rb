@@ -21,7 +21,7 @@ RSpec.describe Pet, type: :model, versioning: true do
     cat.update(name: "Sylvester")
     person.update(name: "Peter")
 
-    expect(person.reload.versions.length).to(eq(3))
+    expect(person.reload.motorefi_versions.length).to(eq(3))
   end
 
   context "when an older version entry's item_type refers to the base_class" do
@@ -37,8 +37,8 @@ RSpec.describe Pet, type: :model, versioning: true do
       # Prior to PR#1143 a subclassed version's item_subtype would be nil.  In order to simulate
       # an entry having been made in the old way, set one of the item_subtype entries to be nil
       # instead of "Cat".
-      versions = PaperTrail::Version.order(:id)
-      versions.second.update(item_subtype: nil)
+      motorefi_versions = MotorefiPaperTrail::Version.order(:id)
+      motorefi_versions.second.update(item_subtype: nil)
 
       # This line runs the `let` for :animal, creating two entries
       animal.update(name: "Muppets Drummer")    # Index 5
@@ -46,37 +46,37 @@ RSpec.describe Pet, type: :model, versioning: true do
     end
 
     it "can reify a subclassed item" do
-      versions = PaperTrail::Version.order(:id)
+      motorefi_versions = MotorefiPaperTrail::Version.order(:id)
       # Still the reification process correctly brings back Cat since `species` is
       # properly set to this sub-classed name.
-      expect(versions.second.reify).to be_a(Cat) # Sylvester
-      expect(versions.third.reify).to be_a(Cat) # Cheshire
-      expect(versions.fourth.reify).to be_a(Cat) # Cheshire that was destroyed
+      expect(motorefi_versions.second.reify).to be_a(Cat) # Sylvester
+      expect(motorefi_versions.third.reify).to be_a(Cat) # Cheshire
+      expect(motorefi_versions.fourth.reify).to be_a(Cat) # Cheshire that was destroyed
       # Creating an object from the base class is correctly identified as "Animal"
-      expect(versions[5].reify).to be_an(Animal) # Muppets Drummer
-      expect(versions[6].reify).to be_an(Animal) # Animal that was destroyed
+      expect(motorefi_versions[5].reify).to be_an(Animal) # Muppets Drummer
+      expect(motorefi_versions[6].reify).to be_an(Animal) # Animal that was destroyed
     end
 
     it "has a generator that builds migrations to upgrade older entries" do
-      # Only newer versions have item_subtype that refers directly to the subclass name.
-      expect(PaperTrail::Version.where(item_subtype: "Cat").count).to eq(3)
+      # Only newer motorefi_versions have item_subtype that refers directly to the subclass name.
+      expect(MotorefiPaperTrail::Version.where(item_subtype: "Cat").count).to eq(3)
 
-      # To have has_many :versions work properly, you can generate and run a migration
+      # To have has_many :motorefi_versions work properly, you can generate and run a migration
       # that examines all existing models to identify use of STI, then updates all older
       # version entries that may refer to the base_class so they refer to the subclass.
-      # (This is the same as running:  rails g paper_trail:update_sti; rails db:migrate)
+      # (This is the same as running:  rails g motorefi_paper_trail:update_sti; rails db:migrate)
       migrator = ::PaperTrailSpecMigrator.new
       expect {
-        migrator.generate_and_migrate("paper_trail:update_item_subtype", [])
+        migrator.generate_and_migrate("motorefi_paper_trail:update_item_subtype", [])
       }.to output(/Associated 1 record to Cat/).to_stdout
 
       # And now it finds all four changes
-      cat_versions = PaperTrail::Version.where(item_subtype: "Cat").order(:id).to_a
+      cat_versions = MotorefiPaperTrail::Version.where(item_subtype: "Cat").order(:id).to_a
       expect(cat_versions.length).to eq(4)
       expect(cat_versions.map(&:event)).to eq(%w[create update update destroy])
 
       # And Animal is unaffected
-      animal_versions = PaperTrail::Version.where(item_subtype: "Animal").order(:id).to_a
+      animal_versions = MotorefiPaperTrail::Version.where(item_subtype: "Animal").order(:id).to_a
       expect(animal_versions.length).to eq(3)
       expect(animal_versions.map(&:event)).to eq(%w[create update destroy])
     end
@@ -95,46 +95,46 @@ RSpec.describe Pet, type: :model, versioning: true do
 
       it "no hints given to generator, does not generate the correct migration" do
         # Because of the change to inheritance_column, the generator `rails g
-        # paper_trail:update_sti` would be unable to determine the previous
+        # motorefi_paper_trail:update_sti` would be unable to determine the previous
         # inheritance_column, so a generated migration *with no hints* would
         # accomplish nothing.
         migrator = ::PaperTrailSpecMigrator.new
         hints = []
         expect {
-          migrator.generate_and_migrate("paper_trail:update_item_subtype", hints)
+          migrator.generate_and_migrate("motorefi_paper_trail:update_item_subtype", hints)
         }.not_to output(/Associated 1 record to Cat/).to_stdout
 
-        expect(PaperTrail::Version.where(item_subtype: "Cat").count).to eq(3)
+        expect(MotorefiPaperTrail::Version.where(item_subtype: "Cat").count).to eq(3)
         # And older Cat changes remain as nil.
-        expect(PaperTrail::Version.where(item_subtype: nil, item_id: cat.id).count).to eq(1)
+        expect(MotorefiPaperTrail::Version.where(item_subtype: nil, item_id: cat.id).count).to eq(1)
       end
 
       it "giving hints to the generator, updates older entries in a custom way" do
         # Pick up all version IDs regarding our single cat Garfield / Sylvester / Cheshire
-        cat_ids = PaperTrail::Version.where(item_type: "Animal", item_id: cat.id).
+        cat_ids = MotorefiPaperTrail::Version.where(item_type: "Animal", item_id: cat.id).
           order(:id).pluck(:id)
         # This time (as opposed to above example) we are going to provide hints
         # to the generator.
         #
         # You can specify custom inheritance_column settings over a range of
-        # IDs so that the generated migration will properly update all your historic versions,
+        # IDs so that the generated migration will properly update all your historic motorefi_versions,
         # having them now to refer to the proper subclass.
 
         # This is the same as running:
-        #   rails g paper_trail:update_sti Animal(species):1..4; rails db:migrate
+        #   rails g motorefi_paper_trail:update_sti Animal(species):1..4; rails db:migrate
         migrator = ::PaperTrailSpecMigrator.new
         hints = ["Animal(species):#{cat_ids.first}..#{cat_ids.last}"]
         expect {
-          migrator.generate_and_migrate("paper_trail:update_item_subtype", hints)
+          migrator.generate_and_migrate("motorefi_paper_trail:update_item_subtype", hints)
         }.to output(/Associated 1 record to Cat/).to_stdout
 
-        # And now the has_many :versions properly finds all four changes
-        cat_versions = cat.versions.order(:id).to_a
+        # And now the has_many :motorefi_versions properly finds all four changes
+        cat_versions = cat.motorefi_versions.order(:id).to_a
         expect(cat_versions.length).to eq(4)
         expect(cat_versions.map(&:event)).to eq(%w[create update update destroy])
 
         # And Animal is still unaffected
-        animal_versions = animal.versions.order(:id).to_a
+        animal_versions = animal.motorefi_versions.order(:id).to_a
         expect(animal_versions.length).to eq(3)
         expect(animal_versions.map(&:event)).to eq(%w[create update destroy])
       end

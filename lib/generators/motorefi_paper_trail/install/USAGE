@@ -1,0 +1,3 @@
+Description:
+  Generates (but does not run) a migration to add a motorefi_versions table. Also generates an initializer
+  file for configuring MotorefiPaperTrail. See section 5.c. Generators in README.md for more information.

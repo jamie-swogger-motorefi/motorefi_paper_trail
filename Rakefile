@@ -27,10 +27,10 @@ task :clean do
   case ENV["DB"]
   when "mysql"
     # TODO: only works locally. doesn't respect database.yml
-    system "mysqladmin drop -f paper_trail_test > /dev/null 2>&1"
+    system "mysqladmin drop -f motorefi_paper_trail_test > /dev/null 2>&1"
   when "postgres"
     # TODO: only works locally. doesn't respect database.yml
-    system "dropdb --if-exists paper_trail_test > /dev/null 2>&1"
+    system "dropdb --if-exists motorefi_paper_trail_test > /dev/null 2>&1"
   when nil, "sqlite"
     ::FileUtils.rm(::Dir.glob("spec/dummy_app/db/*.sqlite3"))
   else
@@ -44,10 +44,10 @@ task :create_db do
   case ENV["DB"]
   when "mysql"
     # TODO: only works locally. doesn't respect database.yml
-    system "mysqladmin create paper_trail_test"
+    system "mysqladmin create motorefi_paper_trail_test"
   when "postgres"
     # TODO: only works locally. doesn't respect database.yml
-    system "createdb paper_trail_test"
+    system "createdb motorefi_paper_trail_test"
   when nil, "sqlite"
     # noop. test.sqlite3 will be created when migration happens
     nil
@@ -63,7 +63,7 @@ EOS
 task prepare: %i[clean install_database_yml create_db]
 
 require "rspec/core/rake_task"
-desc "Run tests on PaperTrail with RSpec"
+desc "Run tests on MotorefiPaperTrail with RSpec"
 task(:spec).clear
 RSpec::Core::RakeTask.new(:spec) do |t|
   t.verbose = false # hide list of specs bit.ly/1nVq3Jn

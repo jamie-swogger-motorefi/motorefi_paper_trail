@@ -3,14 +3,14 @@
 require "spec_helper"
 require "support/shared_examples/queries"
 
-module PaperTrail
+module MotorefiPaperTrail
   ::RSpec.describe Version, type: :model do
     describe "#object_changes", versioning: true do
       let(:widget) { Widget.create!(name: "Dashboard") }
-      let(:value) { widget.versions.last.object_changes }
+      let(:value) { widget.motorefi_versions.last.object_changes }
 
       context "when serializer is YAML" do
-        specify { expect(PaperTrail.serializer).to be PaperTrail::Serializers::YAML }
+        specify { expect(MotorefiPaperTrail.serializer).to be MotorefiPaperTrail::Serializers::YAML }
 
         it "store out as a plain hash" do
           expect(value).not_to include("HashWithIndifferentAccess")
@@ -19,37 +19,37 @@ module PaperTrail
 
       context "with object_changes_adapter" do
         after do
-          PaperTrail.config.object_changes_adapter = nil
+          MotorefiPaperTrail.config.object_changes_adapter = nil
         end
 
         it "creates a version with custom changes" do
           adapter = instance_spy("CustomObjectChangesAdapter")
-          PaperTrail.config.object_changes_adapter = adapter
+          MotorefiPaperTrail.config.object_changes_adapter = adapter
           custom_changes_value = [["name", nil, "Dashboard"]]
           allow(adapter).to(
             receive(:diff).with(
               hash_including("name" => [nil, "Dashboard"])
             ).and_return(custom_changes_value)
           )
-          yaml = widget.versions.last.object_changes
+          yaml = widget.motorefi_versions.last.object_changes
           expect(YAML.load(yaml)).to eq(custom_changes_value)
           expect(adapter).to have_received(:diff)
         end
 
         it "defaults to the original behavior" do
           adapter = Class.new.new
-          PaperTrail.config.object_changes_adapter = adapter
-          expect(widget.versions.last.object_changes).to start_with("---")
+          MotorefiPaperTrail.config.object_changes_adapter = adapter
+          expect(widget.motorefi_versions.last.object_changes).to start_with("---")
         end
       end
 
       context "when serializer is JSON" do
         before do
-          PaperTrail.serializer = PaperTrail::Serializers::JSON
+          MotorefiPaperTrail.serializer = MotorefiPaperTrail::Serializers::JSON
         end
 
         after do
-          PaperTrail.serializer = PaperTrail::Serializers::YAML
+          MotorefiPaperTrail.serializer = MotorefiPaperTrail::Serializers::YAML
         end
 
         it "store out as a plain hash" do
@@ -58,10 +58,10 @@ module PaperTrail
       end
     end
 
-    describe "#paper_trail_originator" do
-      context "with no previous versions" do
+    describe "#motorefi_paper_trail_originator" do
+      context "with no previous motorefi_versions" do
         it "returns nil" do
-          expect(described_class.new.paper_trail_originator).to be_nil
+          expect(described_class.new.motorefi_paper_trail_originator).to be_nil
         end
       end
 
@@ -69,27 +69,27 @@ module PaperTrail
         it "returns name of whodunnit" do
           name = FFaker::Name.name
           widget = Widget.create!(name: FFaker::Name.name)
-          widget.versions.first.update!(whodunnit: name)
+          widget.motorefi_versions.first.update!(whodunnit: name)
           widget.update!(name: FFaker::Name.first_name)
-          expect(widget.versions.last.paper_trail_originator).to eq(name)
+          expect(widget.motorefi_versions.last.motorefi_paper_trail_originator).to eq(name)
         end
       end
     end
 
     describe "#previous" do
-      context "with no previous versions" do
+      context "with no previous motorefi_versions" do
         it "returns nil" do
           expect(described_class.new.previous).to be_nil
         end
       end
 
       context "with previous version", versioning: true do
-        it "returns a PaperTrail::Version" do
+        it "returns a MotorefiPaperTrail::Version" do
           name = FFaker::Name.name
           widget = Widget.create!(name: FFaker::Name.name)
-          widget.versions.first.update!(whodunnit: name)
+          widget.motorefi_versions.first.update!(whodunnit: name)
           widget.update!(name: FFaker::Name.first_name)
-          expect(widget.versions.last.previous).to be_instance_of(described_class)
+          expect(widget.motorefi_versions.last.previous).to be_instance_of(described_class)
         end
       end
     end
