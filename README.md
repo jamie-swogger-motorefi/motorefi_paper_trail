@@ -2,7 +2,9 @@
 
 THIS IS A COPY OF PAPERTRAIL 14.0
 
-This is being used for migrating to a new version of PaperTrail only
+This is being used for migrating to a new version of PaperTrail in `refi` only
+
+DO NOT USE
 
 :warning::warning:
 
