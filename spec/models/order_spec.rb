@@ -9,7 +9,7 @@ RSpec.describe Order, type: :model, versioning: true do
       described_class.create!(customer: customer)
       described_class.destroy_all
 
-      expect(customer.versions.count).to(eq(3))
+      expect(customer.motorefi_versions.count).to(eq(3))
     end
   end
 end

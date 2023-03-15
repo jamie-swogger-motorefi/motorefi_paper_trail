@@ -23,5 +23,5 @@ spec/dummy_app/db/*.sqlite3
 spec/dummy_app/log/*
 spec/dummy_app/tmp/*
 test/debug.log
-test/paper_trail_plugin.sqlite3.db
+test/motorefi_paper_trail_plugin.sqlite3.db
 vendor/*

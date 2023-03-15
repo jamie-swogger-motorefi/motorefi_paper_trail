@@ -1,0 +1,96 @@
+# frozen_string_literal: true
+
+require "spec_helper"
+
+module MotorefiPaperTrail
+  ::RSpec.describe ModelConfig do
+    describe "has_motorefi_paper_trail" do
+      describe "motorefi_versions:" do
+        it "name can be passed instead of an options hash", :deprecated do
+          allow(::ActiveSupport::Deprecation).to receive(:warn)
+          klass = Class.new(ApplicationRecord) do
+            has_motorefi_paper_trail motorefi_versions: :drafts
+          end
+          expect(klass.reflect_on_association(:drafts)).to be_a(
+            ActiveRecord::Reflection::HasManyReflection
+          )
+          expect(::ActiveSupport::Deprecation).to have_received(:warn).once.with(
+            a_string_starting_with("Passing motorefi_versions association name"),
+            array_including(/#{__FILE__}:/)
+          )
+        end
+
+        it "name can be passed in the options hash" do
+          klass = Class.new(ApplicationRecord) do
+            has_motorefi_paper_trail motorefi_versions: { name: :drafts }
+          end
+          expect(klass.reflect_on_association(:drafts)).to be_a(
+            ActiveRecord::Reflection::HasManyReflection
+          )
+        end
+
+        it "class_name can be passed in the options hash" do
+          klass = Class.new(ApplicationRecord) do
+            has_motorefi_paper_trail motorefi_versions: { class_name: "NoObjectVersion" }
+          end
+          expect(klass.reflect_on_association(:motorefi_versions).options[:class_name]).to eq(
+            "NoObjectVersion"
+          )
+        end
+
+        it "allows any option that has_many supports" do
+          klass = Class.new(ApplicationRecord) do
+            has_motorefi_paper_trail motorefi_versions: { autosave: true, validate: true }
+          end
+          expect(klass.reflect_on_association(:motorefi_versions).options[:autosave]).to eq true
+          expect(klass.reflect_on_association(:motorefi_versions).options[:validate]).to eq true
+        end
+
+        it "can even override options that MotorefiPaperTrail adds to has_many" do
+          klass = Class.new(ApplicationRecord) do
+            has_motorefi_paper_trail motorefi_versions: { as: :foo }
+          end
+          expect(klass.reflect_on_association(:motorefi_versions).options[:as]).to eq :foo
+        end
+
+        it "raises an error on unknown has_many options" do
+          expect {
+            Class.new(ApplicationRecord) do
+              has_motorefi_paper_trail motorefi_versions: { read_my_mind: true, validate: true }
+            end
+          }.to raise_error(
+            /Unknown key: :read_my_mind. Valid keys are: .*:class_name,/
+          )
+        end
+
+        describe "passing an abstract class to class_name" do
+          it "raises an error" do
+            expect {
+              Class.new(ApplicationRecord) do
+                has_motorefi_paper_trail motorefi_versions: { class_name: "AbstractVersion" }
+              end
+            }.to raise_error(
+              /use concrete \(not abstract\) version models/
+            )
+          end
+        end
+      end
+
+      describe "class_name:" do
+        it "can be used instead of motorefi_versions: {class_name: ...}", :deprecated do
+          allow(::ActiveSupport::Deprecation).to receive(:warn)
+          klass = Class.new(ApplicationRecord) do
+            has_motorefi_paper_trail class_name: "NoObjectVersion"
+          end
+          expect(klass.reflect_on_association(:motorefi_versions).options[:class_name]).to eq(
+            "NoObjectVersion"
+          )
+          expect(::ActiveSupport::Deprecation).to have_received(:warn).once.with(
+            a_string_starting_with("Passing Version class name"),
+            array_including(/#{__FILE__}:/)
+          )
+        end
+      end
+    end
+  end
+end

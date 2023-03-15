@@ -1,6 +1,6 @@
 test: &test
   adapter: postgresql
-  database: <%= ENV.fetch('PT_CI_DATABASE', 'paper_trail') %>_test
+  database: <%= ENV.fetch('PT_CI_DATABASE', 'motorefi_paper_trail') %>_test
   username: <%= ENV.fetch('PT_CI_DB_USER', 'postgres') %>
   password: <%= ENV.fetch('PT_CI_DB_PASSWORD', '') %>
   host: <%= ENV.fetch('PT_CI_DB_HOST', 'localhost') %>

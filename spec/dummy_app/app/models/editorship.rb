@@ -3,5 +3,5 @@
 class Editorship < ApplicationRecord
   belongs_to :book
   belongs_to :editor
-  has_paper_trail
+  has_motorefi_paper_trail
 end

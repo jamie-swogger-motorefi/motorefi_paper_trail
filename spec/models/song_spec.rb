@@ -7,8 +7,8 @@ require "spec_helper"
     it "works" do
       described_class.create!
       result = described_class.
-        joins(:versions).
-        select("songs.id, max(versions.event) as event").
+        joins(:motorefi_versions).
+        select("songs.id, max(motorefi_versions.event) as event").
         group("songs.id").
         first
       expect(result.event).to eq("create")
@@ -20,7 +20,7 @@ require "spec_helper"
       song = Song.create(length: 4)
       song.update(length: 5)
       expect(song.length).to(eq(5))
-      expect(song.versions.last.reify.length).to(eq(4))
+      expect(song.motorefi_versions.last.reify.length).to(eq(4))
     end
   end
 
@@ -32,7 +32,7 @@ require "spec_helper"
       song.save
       song.name = "Yellow Submarine"
       expect(song.name).to(eq("Yellow Submarine"))
-      expect(song.versions.last.reify.name).to(eq("Good Vibrations"))
+      expect(song.motorefi_versions.last.reify.name).to(eq("Good Vibrations"))
     end
   end
 end

@@ -3,27 +3,27 @@
 require "spec_helper"
 
 RSpec.describe ArticlesController, type: :controller do
-  describe "PaperTrail.request.enabled?" do
-    context "when PaperTrail.enabled? == true" do
-      before { PaperTrail.enabled = true }
+  describe "MotorefiPaperTrail.request.enabled?" do
+    context "when MotorefiPaperTrail.enabled? == true" do
+      before { MotorefiPaperTrail.enabled = true }
 
-      after { PaperTrail.enabled = false }
+      after { MotorefiPaperTrail.enabled = false }
 
       it "returns true" do
-        expect(PaperTrail.enabled?).to eq(true)
+        expect(MotorefiPaperTrail.enabled?).to eq(true)
         post :create, params: { article: { title: "Doh", content: FFaker::Lorem.sentence } }
         expect(assigns(:article)).not_to be_nil
-        expect(PaperTrail.request.enabled?).to eq(true)
-        expect(assigns(:article).versions.length).to eq(1)
+        expect(MotorefiPaperTrail.request.enabled?).to eq(true)
+        expect(assigns(:article).motorefi_versions.length).to eq(1)
       end
     end
 
-    context "when PaperTrail.enabled? == false" do
+    context "when MotorefiPaperTrail.enabled? == false" do
       it "returns false" do
-        expect(PaperTrail.enabled?).to eq(false)
+        expect(MotorefiPaperTrail.enabled?).to eq(false)
         post :create, params: { article: { title: "Doh", content: FFaker::Lorem.sentence } }
-        expect(PaperTrail.request.enabled?).to eq(false)
-        expect(assigns(:article).versions.length).to eq(0)
+        expect(MotorefiPaperTrail.request.enabled?).to eq(false)
+        expect(assigns(:article).motorefi_versions.length).to eq(0)
       end
     end
   end

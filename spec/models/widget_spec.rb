@@ -7,7 +7,7 @@ RSpec.describe Widget, type: :model, versioning: true do
   describe "#changeset" do
     it "has expected values" do
       widget = described_class.create(name: "Henry")
-      changeset = widget.versions.last.changeset
+      changeset = widget.motorefi_versions.last.changeset
       expect(changeset["name"]).to eq([nil, "Henry"])
       expect(changeset["id"]).to eq([nil, widget.id])
       # When comparing timestamps, round off to the nearest second, because
@@ -20,17 +20,17 @@ RSpec.describe Widget, type: :model, versioning: true do
 
     context "with custom object_changes_adapter" do
       after do
-        PaperTrail.config.object_changes_adapter = nil
+        MotorefiPaperTrail.config.object_changes_adapter = nil
       end
 
       it "calls the adapter's load_changeset method" do
         widget = described_class.create(name: "Henry")
         adapter = instance_spy("CustomObjectChangesAdapter")
-        PaperTrail.config.object_changes_adapter = adapter
+        MotorefiPaperTrail.config.object_changes_adapter = adapter
         allow(adapter).to(
-          receive(:load_changeset).with(widget.versions.last).and_return(a: "b", c: "d")
+          receive(:load_changeset).with(widget.motorefi_versions.last).and_return(a: "b", c: "d")
         )
-        changeset = widget.versions.last.changeset
+        changeset = widget.motorefi_versions.last.changeset
         expect(changeset[:a]).to eq("b")
         expect(changeset[:c]).to eq("d")
         expect(adapter).to have_received(:load_changeset)
@@ -38,9 +38,9 @@ RSpec.describe Widget, type: :model, versioning: true do
 
       it "defaults to the original behavior" do
         adapter = Class.new.new
-        PaperTrail.config.object_changes_adapter = adapter
+        MotorefiPaperTrail.config.object_changes_adapter = adapter
         widget = described_class.create(name: "Henry")
-        changeset = widget.versions.last.changeset
+        changeset = widget.motorefi_versions.last.changeset
         expect(changeset[:name]).to eq([nil, "Henry"])
       end
     end
@@ -49,11 +49,11 @@ RSpec.describe Widget, type: :model, versioning: true do
   describe "#object_changes_deserialized" do
     context "when the serializer raises a Psych::DisallowedClass error" do
       it "prints a warning to stderr" do
-        allow(PaperTrail.serializer).to(
+        allow(MotorefiPaperTrail.serializer).to(
           receive(:load).and_raise(::Psych::Exception, "kaboom")
         )
         widget = described_class.create(name: "Henry")
-        ver = widget.versions.last
+        ver = widget.motorefi_versions.last
         expect { ver.send(:object_changes_deserialized) }.to(
           output(/kaboom/).to_stderr
         )
@@ -62,63 +62,63 @@ RSpec.describe Widget, type: :model, versioning: true do
   end
 
   context "with a new record" do
-    it "not have any previous versions" do
-      expect(described_class.new.versions).to(eq([]))
+    it "not have any previous motorefi_versions" do
+      expect(described_class.new.motorefi_versions).to(eq([]))
     end
 
     it "be live" do
-      expect(described_class.new.paper_trail.live?).to(eq(true))
+      expect(described_class.new.motorefi_paper_trail.live?).to(eq(true))
     end
   end
 
   context "with a persisted record" do
     it "have one previous version" do
       widget = described_class.create(name: "Henry", created_at: (Time.current - 1.day))
-      expect(widget.versions.length).to(eq(1))
+      expect(widget.motorefi_versions.length).to(eq(1))
     end
 
     it "be nil in its previous version" do
       widget = described_class.create(name: "Henry")
-      expect(widget.versions.first.object).to(be_nil)
-      expect(widget.versions.first.reify).to(be_nil)
+      expect(widget.motorefi_versions.first.object).to(be_nil)
+      expect(widget.motorefi_versions.first.reify).to(be_nil)
     end
 
     it "record the correct event" do
       widget = described_class.create(name: "Henry")
-      expect(widget.versions.first.event).to(match(/create/i))
+      expect(widget.motorefi_versions.first.event).to(match(/create/i))
     end
 
     it "be live" do
       widget = described_class.create(name: "Henry")
-      expect(widget.paper_trail.live?).to(eq(true))
+      expect(widget.motorefi_paper_trail.live?).to(eq(true))
     end
 
     it "use the widget `updated_at` as the version's `created_at`" do
       widget = described_class.create(name: "Henry")
-      expect(widget.versions.first.created_at.to_i).to(eq(widget.updated_at.to_i))
+      expect(widget.motorefi_versions.first.created_at.to_i).to(eq(widget.updated_at.to_i))
     end
 
     context "when updated without any changes" do
-      it "to have two previous versions" do
+      it "to have two previous motorefi_versions" do
         widget = described_class.create(name: "Henry")
         widget.touch
-        expect(widget.versions.length).to eq(2)
+        expect(widget.motorefi_versions.length).to eq(2)
       end
     end
 
     context "when updated with changes" do
-      it "have three previous versions" do
+      it "have three previous motorefi_versions" do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
-        expect(widget.versions.length).to(eq(2))
+        expect(widget.motorefi_versions.length).to(eq(2))
       end
 
       it "be available in its previous version" do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
         expect(widget.name).to(eq("Harry"))
-        expect(widget.versions.last.object).not_to(be_nil)
-        reified_widget = widget.versions.last.reify
+        expect(widget.motorefi_versions.last.object).not_to(be_nil)
+        reified_widget = widget.motorefi_versions.last.reify
         expect(reified_widget.name).to(eq("Henry"))
         expect(widget.name).to(eq("Harry"))
       end
@@ -126,40 +126,40 @@ RSpec.describe Widget, type: :model, versioning: true do
       it "have the same ID in its previous version" do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
-        expect(widget.versions.last.reify.id).to(eq(widget.id))
+        expect(widget.motorefi_versions.last.reify.id).to(eq(widget.id))
       end
 
       it "record the correct event" do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
-        expect(widget.versions.last.event).to(match(/update/i))
+        expect(widget.motorefi_versions.last.event).to(match(/update/i))
       end
 
-      it "have versions that are not live" do
+      it "have motorefi_versions that are not live" do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
-        widget.versions.filter_map(&:reify).each do |v|
-          expect(v.paper_trail).not_to be_live
+        widget.motorefi_versions.filter_map(&:reify).each do |v|
+          expect(v.motorefi_paper_trail).not_to be_live
         end
       end
 
       it "have stored changes" do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
-        last_obj_changes = widget.versions.last.object_changes
-        actual = PaperTrail.serializer.load(last_obj_changes).reject do |k, _v|
+        last_obj_changes = widget.motorefi_versions.last.object_changes
+        actual = MotorefiPaperTrail.serializer.load(last_obj_changes).reject do |k, _v|
           (k.to_sym == :updated_at)
         end
         expect(actual).to(eq("name" => %w[Henry Harry]))
-        actual = widget.versions.last.changeset.reject { |k, _v| (k.to_sym == :updated_at) }
+        actual = widget.motorefi_versions.last.changeset.reject { |k, _v| (k.to_sym == :updated_at) }
         expect(actual).to(eq("name" => %w[Henry Harry]))
       end
 
       it "return changes with indifferent access" do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
-        expect(widget.versions.last.changeset[:name]).to(eq(%w[Henry Harry]))
-        expect(widget.versions.last.changeset["name"]).to(eq(%w[Henry Harry]))
+        expect(widget.motorefi_versions.last.changeset[:name]).to(eq(%w[Henry Harry]))
+        expect(widget.motorefi_versions.last.changeset["name"]).to(eq(%w[Henry Harry]))
       end
     end
 
@@ -168,7 +168,7 @@ RSpec.describe Widget, type: :model, versioning: true do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
         wotsit = widget.create_wotsit name: "John"
-        reified_widget = widget.versions.last.reify
+        reified_widget = widget.motorefi_versions.last.reify
         expect(reified_widget.wotsit).to eq(wotsit)
         expect(widget.reload.wotsit).to eq(wotsit)
       end
@@ -180,11 +180,11 @@ RSpec.describe Widget, type: :model, versioning: true do
         widget.update(name: "Harry")
         widget.fluxors.create(name: "f-zero")
         widget.fluxors.create(name: "f-one")
-        reified_widget = widget.versions.last.reify
+        reified_widget = widget.motorefi_versions.last.reify
         expect(reified_widget.fluxors.length).to(eq(widget.fluxors.length))
         expect(reified_widget.fluxors).to match_array(widget.fluxors)
-        expect(reified_widget.versions.length).to(eq(widget.versions.length))
-        expect(reified_widget.versions).to match_array(widget.versions)
+        expect(reified_widget.motorefi_versions.length).to(eq(widget.motorefi_versions.length))
+        expect(reified_widget.motorefi_versions).to match_array(widget.motorefi_versions)
       end
     end
 
@@ -194,11 +194,11 @@ RSpec.describe Widget, type: :model, versioning: true do
         widget.update(name: "Harry")
         widget.whatchamajiggers.create(name: "f-zero")
         widget.whatchamajiggers.create(name: "f-zero")
-        reified_widget = widget.versions.last.reify
+        reified_widget = widget.motorefi_versions.last.reify
         expect(reified_widget.whatchamajiggers.length).to eq(widget.whatchamajiggers.length)
         expect(reified_widget.whatchamajiggers).to match_array(widget.whatchamajiggers)
-        expect(reified_widget.versions.length).to(eq(widget.versions.length))
-        expect(reified_widget.versions).to match_array(widget.versions)
+        expect(reified_widget.motorefi_versions.length).to(eq(widget.motorefi_versions.length))
+        expect(reified_widget.motorefi_versions).to match_array(widget.motorefi_versions)
       end
     end
 
@@ -216,21 +216,21 @@ RSpec.describe Widget, type: :model, versioning: true do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
         widget.destroy
-        expect(PaperTrail::Version.last.event).to(match(/destroy/i))
+        expect(MotorefiPaperTrail::Version.last.event).to(match(/destroy/i))
       end
 
-      it "have three previous versions" do
+      it "have three previous motorefi_versions" do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
         widget.destroy
-        expect(PaperTrail::Version.with_item_keys("Widget", widget.id).length).to(eq(3))
+        expect(MotorefiPaperTrail::Version.with_item_keys("Widget", widget.id).length).to(eq(3))
       end
 
       it "returns the expected attributes for the reified widget" do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
         widget.destroy
-        reified_widget = PaperTrail::Version.last.reify
+        reified_widget = MotorefiPaperTrail::Version.last.reify
         expect(reified_widget.id).to eq(widget.id)
         expected = widget.attributes
         actual = reified_widget.attributes
@@ -257,7 +257,7 @@ RSpec.describe Widget, type: :model, versioning: true do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
         widget.destroy
-        reified_widget = PaperTrail::Version.last.reify
+        reified_widget = MotorefiPaperTrail::Version.last.reify
         expect(reified_widget.save).to(be_truthy)
       end
 
@@ -266,7 +266,7 @@ RSpec.describe Widget, type: :model, versioning: true do
         widget.update(name: "Harry")
         widget.fluxors.create(name: "flux")
         widget.destroy
-        reified_widget = PaperTrail::Version.last.reify
+        reified_widget = MotorefiPaperTrail::Version.last.reify
         reified_widget.save
         expect(reified_widget.fluxors.length).to(eq(1))
       end
@@ -275,9 +275,9 @@ RSpec.describe Widget, type: :model, versioning: true do
         widget = described_class.create(name: "Henry")
         widget.update(name: "Harry")
         widget.destroy
-        expect(widget.versions.first.item.object_id).not_to eq(widget.object_id)
-        expect(widget.versions.last.item.object_id).not_to eq(widget.object_id)
-        expect(widget.versions.last.item).to be_nil
+        expect(widget.motorefi_versions.first.item.object_id).not_to eq(widget.object_id)
+        expect(widget.motorefi_versions.last.item.object_id).not_to eq(widget.object_id)
+        expect(widget.motorefi_versions.last.item).to be_nil
       end
     end
   end
@@ -285,7 +285,7 @@ RSpec.describe Widget, type: :model, versioning: true do
   context "with a record's papertrail" do
     let!(:d0) { Date.new(2009, 5, 29) }
     let!(:t0) { Time.current }
-    let(:previous_widget) { widget.versions.last.reify }
+    let(:previous_widget) { widget.motorefi_versions.last.reify }
     let(:widget) {
       described_class.create(
         name: "Warble",
@@ -352,7 +352,7 @@ RSpec.describe Widget, type: :model, versioning: true do
     end
 
     context "when a column has been removed from the record's schema" do
-      let(:last_version) { widget.versions.last }
+      let(:last_version) { widget.motorefi_versions.last }
 
       it "reify previous version" do
         assert_kind_of(described_class, last_version.reify)
@@ -375,39 +375,39 @@ RSpec.describe Widget, type: :model, versioning: true do
   end
 
   context "with a record" do
-    context "with PaperTrail globally disabled, when updated" do
-      after { PaperTrail.enabled = true }
+    context "with MotorefiPaperTrail globally disabled, when updated" do
+      after { MotorefiPaperTrail.enabled = true }
 
       it "not add to its trail" do
         widget = described_class.create(name: "Zaphod")
-        PaperTrail.enabled = false
-        count = widget.versions.length
+        MotorefiPaperTrail.enabled = false
+        count = widget.motorefi_versions.length
         widget.update(name: "Beeblebrox")
-        expect(widget.versions.length).to(eq(count))
+        expect(widget.motorefi_versions.length).to(eq(count))
       end
     end
 
     context "with its paper trail turned off, when updated" do
       after do
-        PaperTrail.request.enable_model(described_class)
+        MotorefiPaperTrail.request.enable_model(described_class)
       end
 
       it "not add to its trail" do
         widget = described_class.create(name: "Zaphod")
-        PaperTrail.request.disable_model(described_class)
-        count = widget.versions.length
+        MotorefiPaperTrail.request.disable_model(described_class)
+        count = widget.motorefi_versions.length
         widget.update(name: "Beeblebrox")
-        expect(widget.versions.length).to(eq(count))
+        expect(widget.motorefi_versions.length).to(eq(count))
       end
 
       it "add to its trail" do
         widget = described_class.create(name: "Zaphod")
-        PaperTrail.request.disable_model(described_class)
-        count = widget.versions.length
+        MotorefiPaperTrail.request.disable_model(described_class)
+        count = widget.motorefi_versions.length
         widget.update(name: "Beeblebrox")
-        PaperTrail.request.enable_model(described_class)
+        MotorefiPaperTrail.request.enable_model(described_class)
         widget.update(name: "Ford")
-        expect(widget.versions.length).to(eq((count + 1)))
+        expect(widget.motorefi_versions.length).to(eq((count + 1)))
       end
     end
   end
@@ -416,51 +416,51 @@ RSpec.describe Widget, type: :model, versioning: true do
     context "when a record is created" do
       it "tracks who made the change" do
         widget = described_class.new(name: "Fidget")
-        PaperTrail.request.whodunnit = "Alice"
+        MotorefiPaperTrail.request.whodunnit = "Alice"
         widget.save
-        version = widget.versions.last
+        version = widget.motorefi_versions.last
         expect(version.whodunnit).to(eq("Alice"))
-        expect(version.paper_trail_originator).to(be_nil)
+        expect(version.motorefi_paper_trail_originator).to(be_nil)
         expect(version.terminator).to(eq("Alice"))
-        expect(widget.paper_trail.originator).to(eq("Alice"))
+        expect(widget.motorefi_paper_trail.originator).to(eq("Alice"))
       end
     end
 
     context "when created, then updated" do
       it "tracks who made the change" do
         widget = described_class.new(name: "Fidget")
-        PaperTrail.request.whodunnit = "Alice"
+        MotorefiPaperTrail.request.whodunnit = "Alice"
         widget.save
-        PaperTrail.request.whodunnit = "Bob"
+        MotorefiPaperTrail.request.whodunnit = "Bob"
         widget.update(name: "Rivet")
-        version = widget.versions.last
+        version = widget.motorefi_versions.last
         expect(version.whodunnit).to(eq("Bob"))
-        expect(version.paper_trail_originator).to(eq("Alice"))
+        expect(version.motorefi_paper_trail_originator).to(eq("Alice"))
         expect(version.terminator).to(eq("Bob"))
-        expect(widget.paper_trail.originator).to(eq("Bob"))
+        expect(widget.motorefi_paper_trail.originator).to(eq("Bob"))
       end
     end
 
     context "when created, updated, and destroyed" do
       it "tracks who made the change" do
         widget = described_class.new(name: "Fidget")
-        PaperTrail.request.whodunnit = "Alice"
+        MotorefiPaperTrail.request.whodunnit = "Alice"
         widget.save
-        PaperTrail.request.whodunnit = "Bob"
+        MotorefiPaperTrail.request.whodunnit = "Bob"
         widget.update(name: "Rivet")
-        PaperTrail.request.whodunnit = "Charlie"
+        MotorefiPaperTrail.request.whodunnit = "Charlie"
         widget.destroy
-        version = PaperTrail::Version.last
+        version = MotorefiPaperTrail::Version.last
         expect(version.whodunnit).to(eq("Charlie"))
-        expect(version.paper_trail_originator).to(eq("Bob"))
+        expect(version.motorefi_paper_trail_originator).to(eq("Bob"))
         expect(version.terminator).to(eq("Charlie"))
-        expect(widget.paper_trail.originator).to(eq("Charlie"))
+        expect(widget.motorefi_paper_trail.originator).to(eq("Charlie"))
       end
     end
   end
 
-  context "with an item with versions" do
-    context "when the versions were created over time" do
+  context "with an item with motorefi_versions" do
+    context "when the motorefi_versions were created over time" do
       let(:widget) { described_class.create(name: "Widget") }
       let(:t0) { 2.days.ago }
       let(:t1) { 1.day.ago }
@@ -469,80 +469,80 @@ RSpec.describe Widget, type: :model, versioning: true do
       before do
         widget.update(name: "Fidget")
         widget.update(name: "Digit")
-        widget.versions[0].update(created_at: t0)
-        widget.versions[1].update(created_at: t1)
-        widget.versions[2].update(created_at: t2)
+        widget.motorefi_versions[0].update(created_at: t0)
+        widget.motorefi_versions[1].update(created_at: t1)
+        widget.motorefi_versions[2].update(created_at: t2)
         widget.update_attribute(:updated_at, t2)
       end
 
       it "return nil for version_at before it was created" do
-        expect(widget.paper_trail.version_at((t0 - 1))).to(be_nil)
+        expect(widget.motorefi_paper_trail.version_at((t0 - 1))).to(be_nil)
       end
 
       it "return how it looked when created for version_at its creation" do
-        expect(widget.paper_trail.version_at(t0).name).to(eq("Widget"))
+        expect(widget.motorefi_paper_trail.version_at(t0).name).to(eq("Widget"))
       end
 
       it "return how it looked before its first update" do
-        expect(widget.paper_trail.version_at((t1 - 1)).name).to(eq("Widget"))
+        expect(widget.motorefi_paper_trail.version_at((t1 - 1)).name).to(eq("Widget"))
       end
 
       it "return how it looked after its first update" do
-        expect(widget.paper_trail.version_at(t1).name).to(eq("Fidget"))
+        expect(widget.motorefi_paper_trail.version_at(t1).name).to(eq("Fidget"))
       end
 
       it "return how it looked before its second update" do
-        expect(widget.paper_trail.version_at((t2 - 1)).name).to(eq("Fidget"))
+        expect(widget.motorefi_paper_trail.version_at((t2 - 1)).name).to(eq("Fidget"))
       end
 
       it "return how it looked after its second update" do
-        expect(widget.paper_trail.version_at(t2).name).to(eq("Digit"))
+        expect(widget.motorefi_paper_trail.version_at(t2).name).to(eq("Digit"))
       end
 
       it "return the current object for version_at after latest update" do
-        expect(widget.paper_trail.version_at(1.day.from_now).name).to(eq("Digit"))
+        expect(widget.motorefi_paper_trail.version_at(1.day.from_now).name).to(eq("Digit"))
       end
 
       it "still return a widget when appropriate, when passing timestamp as string" do
         expect(
-          widget.paper_trail.version_at((t0 + 1.second).to_s).name
+          widget.motorefi_paper_trail.version_at((t0 + 1.second).to_s).name
         ).to(eq("Widget"))
         expect(
-          widget.paper_trail.version_at((t1 + 1.second).to_s).name
+          widget.motorefi_paper_trail.version_at((t1 + 1.second).to_s).name
         ).to(eq("Fidget"))
         expect(
-          widget.paper_trail.version_at((t2 + 1.second).to_s).name
+          widget.motorefi_paper_trail.version_at((t2 + 1.second).to_s).name
         ).to(eq("Digit"))
       end
     end
 
     describe ".versions_between" do
-      it "return versions in the time period" do
+      it "return motorefi_versions in the time period" do
         widget = described_class.create(name: "Widget")
         widget.update(name: "Fidget")
         widget.update(name: "Digit")
-        widget.versions[0].update(created_at: 30.days.ago)
-        widget.versions[1].update(created_at: 15.days.ago)
-        widget.versions[2].update(created_at: 1.day.ago)
+        widget.motorefi_versions[0].update(created_at: 30.days.ago)
+        widget.motorefi_versions[1].update(created_at: 15.days.ago)
+        widget.motorefi_versions[2].update(created_at: 1.day.ago)
         widget.update_attribute(:updated_at, 1.day.ago)
         expect(
-          widget.paper_trail.versions_between(20.days.ago, 10.days.ago).map(&:name)
+          widget.motorefi_paper_trail.versions_between(20.days.ago, 10.days.ago).map(&:name)
         ).to(eq(["Fidget"]))
         expect(
-          widget.paper_trail.versions_between(45.days.ago, 10.days.ago).map(&:name)
+          widget.motorefi_paper_trail.versions_between(45.days.ago, 10.days.ago).map(&:name)
         ).to(eq(%w[Widget Fidget]))
         expect(
-          widget.paper_trail.versions_between(16.days.ago, 1.minute.ago).map(&:name)
+          widget.motorefi_paper_trail.versions_between(16.days.ago, 1.minute.ago).map(&:name)
         ).to(eq(%w[Fidget Digit Digit]))
         expect(
-          widget.paper_trail.versions_between(60.days.ago, 45.days.ago).map(&:name)
+          widget.motorefi_paper_trail.versions_between(60.days.ago, 45.days.ago).map(&:name)
         ).to(eq([]))
       end
     end
 
     context "with the first version" do
       let(:widget) { described_class.create(name: "Widget") }
-      let(:version) { widget.versions.last }
+      let(:version) { widget.motorefi_versions.last }
 
       before do
         widget = described_class.create(name: "Widget")
@@ -555,7 +555,7 @@ RSpec.describe Widget, type: :model, versioning: true do
       end
 
       it "return the next version" do
-        expect(version.next).to(eq(widget.versions[1]))
+        expect(version.next).to(eq(widget.motorefi_versions[1]))
       end
 
       it "return the correct index" do
@@ -565,7 +565,7 @@ RSpec.describe Widget, type: :model, versioning: true do
 
     context "with the last version" do
       let(:widget) { described_class.create(name: "Widget") }
-      let(:version) { widget.versions.last }
+      let(:version) { widget.motorefi_versions.last }
 
       before do
         widget.update(name: "Fidget")
@@ -573,7 +573,7 @@ RSpec.describe Widget, type: :model, versioning: true do
       end
 
       it "return the previous version" do
-        expect(version.previous).to(eq(widget.versions[(widget.versions.length - 2)]))
+        expect(version.previous).to(eq(widget.motorefi_versions[(widget.motorefi_versions.length - 2)]))
       end
 
       it "have a nil next version" do
@@ -581,7 +581,7 @@ RSpec.describe Widget, type: :model, versioning: true do
       end
 
       it "return the correct index" do
-        expect(version.index).to(eq((widget.versions.length - 1)))
+        expect(version.index).to(eq((widget.motorefi_versions.length - 1)))
       end
     end
   end
@@ -592,10 +592,10 @@ RSpec.describe Widget, type: :model, versioning: true do
       %w[Tom Dick Jane].each do |name|
         widget.update(name: name)
       end
-      version = widget.versions.last
+      version = widget.motorefi_versions.last
       widget = version.reify
       expect(widget.version).to(eq(version))
-      expect(widget.paper_trail.previous_version).to(eq(widget.versions[-2].reify))
+      expect(widget.motorefi_paper_trail.previous_version).to(eq(widget.motorefi_versions[-2].reify))
     end
   end
 
@@ -606,22 +606,22 @@ RSpec.describe Widget, type: :model, versioning: true do
         %w[Tom Dick Jane].each do |name|
           widget.update(name: name)
         end
-        second_widget = widget.versions[1].reify
-        last_widget = widget.versions.last.reify
-        expect(second_widget.paper_trail.next_version.name).to(eq(widget.versions[2].reify.name))
-        expect(widget.name).to(eq(last_widget.paper_trail.next_version.name))
+        second_widget = widget.motorefi_versions[1].reify
+        last_widget = widget.motorefi_versions.last.reify
+        expect(second_widget.motorefi_paper_trail.next_version.name).to(eq(widget.motorefi_versions[2].reify.name))
+        expect(widget.name).to(eq(last_widget.motorefi_paper_trail.next_version.name))
       end
     end
 
     context "with a non-reified item" do
       it "always returns nil because cannot ever have a next version" do
         widget = described_class.new
-        expect(widget.paper_trail.next_version).to(be_nil)
+        expect(widget.motorefi_paper_trail.next_version).to(be_nil)
         widget.save
         %w[Tom Dick Jane].each do |name|
           widget.update(name: name)
         end
-        expect(widget.paper_trail.next_version).to(be_nil)
+        expect(widget.motorefi_paper_trail.next_version).to(be_nil)
       end
     end
   end
@@ -633,22 +633,22 @@ RSpec.describe Widget, type: :model, versioning: true do
         %w[Tom Dick Jane].each do |name|
           widget.update(name: name)
         end
-        second_widget = widget.versions[1].reify
-        last_widget = widget.versions.last.reify
-        expect(second_widget.paper_trail.previous_version).to(be_nil)
-        expect(last_widget.paper_trail.previous_version.name).to(eq(widget.versions[-2].reify.name))
+        second_widget = widget.motorefi_versions[1].reify
+        last_widget = widget.motorefi_versions.last.reify
+        expect(second_widget.motorefi_paper_trail.previous_version).to(be_nil)
+        expect(last_widget.motorefi_paper_trail.previous_version.name).to(eq(widget.motorefi_versions[-2].reify.name))
       end
     end
 
     context "with a non-reified item" do
       it "returns the object (not a Version) as it was most recently" do
         widget = described_class.new
-        expect(widget.paper_trail.previous_version).to(be_nil)
+        expect(widget.motorefi_paper_trail.previous_version).to(be_nil)
         widget.save
         %w[Tom Dick Jane].each do |name|
           widget.update(name: name)
         end
-        expect(widget.paper_trail.previous_version.name).to(eq(widget.versions.last.reify.name))
+        expect(widget.motorefi_paper_trail.previous_version.name).to(eq(widget.motorefi_versions.last.reify.name))
       end
     end
   end
@@ -657,7 +657,7 @@ RSpec.describe Widget, type: :model, versioning: true do
     it "not have a version created on destroy" do
       widget = described_class.new
       widget.destroy
-      expect(widget.versions.empty?).to(eq(true))
+      expect(widget.motorefi_versions.empty?).to(eq(true))
     end
   end
 
@@ -677,8 +677,8 @@ RSpec.describe Widget, type: :model, versioning: true do
       # Json fields for `object` & `object_changes` attributes is most efficient way
       # to do the things - this way we will save even more RAM, as well as will skip
       # the whole YAML serialization
-      allow(PaperTrail::Version).to receive(:object_changes_col_is_json?).and_return(true)
-      allow(PaperTrail::Version).to receive(:object_col_is_json?).and_return(true)
+      allow(MotorefiPaperTrail::Version).to receive(:object_changes_col_is_json?).and_return(true)
+      allow(MotorefiPaperTrail::Version).to receive(:object_col_is_json?).and_return(true)
 
       # Force the loading of all lazy things like class definitions,
       # in order to get the pure benchmark
@@ -688,7 +688,7 @@ RSpec.describe Widget, type: :model, versioning: true do
     describe "#build_version_on_create" do
       let(:version_building) do
         lambda do
-          widget.paper_trail.send(
+          widget.motorefi_paper_trail.send(
             :build_version_on_create,
             in_after_callback: false
           )
@@ -719,7 +719,7 @@ RSpec.describe Widget, type: :model, versioning: true do
       end
       let(:version_building) do
         lambda do
-          widget.paper_trail.send(
+          widget.motorefi_paper_trail.send(
             :build_version_on_update,
             force: false,
             in_after_callback: false,
@@ -761,14 +761,14 @@ RSpec.describe Widget, type: :model, versioning: true do
     context "when enabled", versioning: true do
       it "enables versioning" do
         widget = described_class.create! name: "Bob", an_integer: 1
-        expect(widget.versions.size).to eq(1)
+        expect(widget.motorefi_versions.size).to eq(1)
       end
     end
 
     context "when disabled", versioning: false do
       it "does not enable versioning" do
         widget = described_class.create! name: "Bob", an_integer: 1
-        expect(widget.versions.size).to eq(0)
+        expect(widget.motorefi_versions.size).to eq(0)
       end
     end
   end
@@ -779,7 +779,7 @@ RSpec.describe Widget, type: :model, versioning: true do
     describe "before_save" do
       it "resets value for timestamp attrs for update so that value gets updated properly" do
         widget.update!(name: "Foobar")
-        w = widget.versions.last.reify
+        w = widget.motorefi_versions.last.reify
         expect { w.save! }.to change(w, :updated_at)
       end
     end
@@ -788,7 +788,7 @@ RSpec.describe Widget, type: :model, versioning: true do
       let(:widget) { described_class.create!(name: "Foobar", created_at: Time.current - 1.week) }
 
       it "corresponding version uses the widget's `updated_at`" do
-        expect(widget.versions.last.created_at.to_i).to eq(widget.updated_at.to_i)
+        expect(widget.motorefi_versions.last.created_at.to_i).to eq(widget.updated_at.to_i)
       end
     end
 
@@ -798,27 +798,27 @@ RSpec.describe Widget, type: :model, versioning: true do
       end
 
       it "clears the `versions_association_name` virtual attribute" do
-        w = widget.versions.last.reify
-        expect(w.paper_trail).not_to be_live
+        w = widget.motorefi_versions.last.reify
+        expect(w.motorefi_paper_trail).not_to be_live
         w.save!
-        expect(w.paper_trail).to be_live
+        expect(w.motorefi_paper_trail).to be_live
       end
 
       it "corresponding version uses the widget updated_at" do
-        expect(widget.versions.last.created_at.to_i).to eq(widget.updated_at.to_i)
+        expect(widget.motorefi_versions.last.created_at.to_i).to eq(widget.updated_at.to_i)
       end
     end
 
     describe "after_destroy" do
       it "creates a version for that event" do
-        expect { widget.destroy }.to change(widget.versions, :count).by(1)
+        expect { widget.destroy }.to change(widget.motorefi_versions, :count).by(1)
       end
 
       it "assigns the version into the `versions_association_name`" do
         expect(widget.version).to be_nil
         widget.destroy
         expect(widget.version).not_to be_nil
-        expect(widget.version).to eq(widget.versions.last)
+        expect(widget.version).to eq(widget.motorefi_versions.last)
       end
     end
 
@@ -837,13 +837,13 @@ RSpec.describe Widget, type: :model, versioning: true do
       end
 
       it "does not create an event for changes that did not happen" do
-        widget.versions.map(&:changeset).each do |changeset|
+        widget.motorefi_versions.map(&:changeset).each do |changeset|
           expect(changeset.fetch("name", [])).not_to include(rolled_back_name)
         end
       end
 
       it "has not yet loaded the assocation" do
-        expect(widget.versions).not_to be_loaded
+        expect(widget.motorefi_versions).not_to be_loaded
       end
     end
   end
@@ -853,8 +853,8 @@ RSpec.describe Widget, type: :model, versioning: true do
 
     describe "sort order" do
       it "sorts by the timestamp order from the `VersionConcern`" do
-        expect(widget.versions.to_sql).to eq(
-          widget.versions.reorder(PaperTrail::Version.timestamp_sort_order).to_sql
+        expect(widget.motorefi_versions.to_sql).to eq(
+          widget.motorefi_versions.reorder(MotorefiPaperTrail::Version.timestamp_sort_order).to_sql
         )
       end
     end
@@ -865,7 +865,7 @@ RSpec.describe Widget, type: :model, versioning: true do
 
     it "creates a version record" do
       wordget = described_class.create
-      assert_equal 1, wordget.versions.length
+      assert_equal 1, wordget.motorefi_versions.length
     end
   end
 
@@ -874,32 +874,32 @@ RSpec.describe Widget, type: :model, versioning: true do
 
     it "creates a version record" do
       widget = described_class.create
-      assert_equal 1, widget.versions.length
+      assert_equal 1, widget.motorefi_versions.length
       widget.destroy
-      versions_for_widget = PaperTrail::Version.with_item_keys("Widget", widget.id)
+      versions_for_widget = MotorefiPaperTrail::Version.with_item_keys("Widget", widget.id)
       assert_equal 2, versions_for_widget.length
     end
 
     it "can have multiple destruction records" do
-      versions = lambda { |widget|
+      motorefi_versions = lambda { |widget|
         # Workaround for AR 3. When we drop AR 3 support, we can simply use
-        # the `widget.versions` association, instead of `with_item_keys`.
-        PaperTrail::Version.with_item_keys("Widget", widget.id)
+        # the `widget.motorefi_versions` association, instead of `with_item_keys`.
+        MotorefiPaperTrail::Version.with_item_keys("Widget", widget.id)
       }
       widget = described_class.create
-      assert_equal 1, widget.versions.length
+      assert_equal 1, widget.motorefi_versions.length
       widget.destroy
-      assert_equal 2, versions.call(widget).length
+      assert_equal 2, motorefi_versions.call(widget).length
       widget = widget.version.reify
       widget.save
-      assert_equal 3, versions.call(widget).length
+      assert_equal 3, motorefi_versions.call(widget).length
       widget.destroy
-      assert_equal 4, versions.call(widget).length
-      assert_equal 2, versions.call(widget).where(event: "destroy").length
+      assert_equal 4, motorefi_versions.call(widget).length
+      assert_equal 2, motorefi_versions.call(widget).where(event: "destroy").length
     end
   end
 
-  describe "#paper_trail.originator", versioning: true do
+  describe "#motorefi_paper_trail.originator", versioning: true do
     let(:widget) { described_class.create! name: "Bob", an_integer: 1 }
 
     describe "return value" do
@@ -907,33 +907,33 @@ RSpec.describe Widget, type: :model, versioning: true do
       let(:new_name) { FFaker::Name.name }
 
       before do
-        PaperTrail.request.whodunnit = orig_name
+        MotorefiPaperTrail.request.whodunnit = orig_name
       end
 
       it "returns the originator for the model at a given state" do
-        expect(widget.paper_trail).to be_live
-        expect(widget.paper_trail.originator).to eq(orig_name)
-        ::PaperTrail.request(whodunnit: new_name) {
+        expect(widget.motorefi_paper_trail).to be_live
+        expect(widget.motorefi_paper_trail.originator).to eq(orig_name)
+        ::MotorefiPaperTrail.request(whodunnit: new_name) {
           widget.update(name: "Elizabeth")
         }
-        expect(widget.paper_trail.originator).to eq(new_name)
+        expect(widget.motorefi_paper_trail.originator).to eq(new_name)
       end
 
       it "returns the appropriate originator" do
         widget.update(name: "Andy")
-        PaperTrail.request.whodunnit = new_name
+        MotorefiPaperTrail.request.whodunnit = new_name
         widget.update(name: "Elizabeth")
-        reified_widget = widget.versions[1].reify
-        expect(reified_widget.paper_trail.originator).to eq(orig_name)
+        reified_widget = widget.motorefi_versions[1].reify
+        expect(reified_widget.motorefi_paper_trail.originator).to eq(orig_name)
         expect(reified_widget).not_to be_new_record
       end
 
       it "can create a new instance with options[:dup]" do
         widget.update(name: "Andy")
-        PaperTrail.request.whodunnit = new_name
+        MotorefiPaperTrail.request.whodunnit = new_name
         widget.update(name: "Elizabeth")
-        reified_widget = widget.versions[1].reify(dup: true)
-        expect(reified_widget.paper_trail.originator).to eq(orig_name)
+        reified_widget = widget.motorefi_versions[1].reify(dup: true)
+        expect(reified_widget.motorefi_paper_trail.originator).to eq(orig_name)
         expect(reified_widget).to be_new_record
       end
     end
@@ -946,7 +946,7 @@ RSpec.describe Widget, type: :model, versioning: true do
       it "returns nil" do
         widget.update_attribute(:name, "foobar")
         widget.destroy
-        expect(widget.paper_trail.version_at(Time.current)).to be_nil
+        expect(widget.motorefi_paper_trail.version_at(Time.current)).to be_nil
       end
     end
   end
@@ -956,33 +956,33 @@ RSpec.describe Widget, type: :model, versioning: true do
 
     it "creates a version" do
       expect { widget.touch }.to change {
-        widget.versions.count
+        widget.motorefi_versions.count
       }.by(+1)
     end
 
     context "when request is disabled" do
       it "does not create a version" do
-        PaperTrail.request(enabled: false) do
-          expect { widget.touch }.not_to(change { widget.versions.count })
+        MotorefiPaperTrail.request(enabled: false) do
+          expect { widget.touch }.not_to(change { widget.motorefi_versions.count })
         end
       end
     end
   end
 
-  describe ".paper_trail.update_columns", versioning: true do
+  describe ".motorefi_paper_trail.update_columns", versioning: true do
     it "creates a version record" do
       widget = described_class.create
-      expect(widget.versions.count).to eq(1)
-      widget.paper_trail.update_columns(name: "Bugle")
-      expect(widget.versions.count).to eq(2)
-      expect(widget.versions.last.event).to(eq("update"))
-      expect(widget.versions.last.changeset[:name]).to eq([nil, "Bugle"])
+      expect(widget.motorefi_versions.count).to eq(1)
+      widget.motorefi_paper_trail.update_columns(name: "Bugle")
+      expect(widget.motorefi_versions.count).to eq(2)
+      expect(widget.motorefi_versions.last.event).to(eq("update"))
+      expect(widget.motorefi_versions.last.changeset[:name]).to eq([nil, "Bugle"])
     end
 
     it "uses current time for the version created_at" do
       widget = described_class.create(updated_at: "2015-01-01 15:00")
-      widget.paper_trail.update_columns(name: "Bugle")
-      version = widget.versions.where(event: "update").last
+      widget.motorefi_paper_trail.update_columns(name: "Bugle")
+      version = widget.motorefi_versions.where(event: "update").last
       expect(version.created_at.to_f).to be_within(5.0).of(Time.now.to_f)
     end
   end
@@ -992,9 +992,9 @@ RSpec.describe Widget, type: :model, versioning: true do
 
     it "creates a version record" do
       widget = described_class.create
-      assert_equal 1, widget.versions.length
+      assert_equal 1, widget.motorefi_versions.length
       widget.update(name: "Bugle")
-      assert_equal 2, widget.versions.length
+      assert_equal 2, widget.motorefi_versions.length
     end
   end
 end

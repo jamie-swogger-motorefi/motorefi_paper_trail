@@ -7,5 +7,5 @@ class Book < ApplicationRecord
   has_many :editorships, dependent: :destroy
   has_many :editors, through: :editorships
 
-  has_paper_trail
+  has_motorefi_paper_trail
 end

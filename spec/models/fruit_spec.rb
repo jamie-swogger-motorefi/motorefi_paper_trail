@@ -17,7 +17,7 @@ if ENV["DB"] == "postgres" && JsonVersion.table_exists?
       end
     end
 
-    describe "queries of versions", versioning: true do
+    describe "queries of motorefi_versions", versioning: true do
       let!(:fruit) { described_class.create(name: "Apple", mass: 1, color: "green") }
 
       before do

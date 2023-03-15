@@ -2,7 +2,7 @@
 
 module Family
   class Family < ApplicationRecord
-    has_paper_trail
+    has_motorefi_paper_trail
 
     has_many :familie_lines, class_name: "::Family::FamilyLine", foreign_key: :parent_id
     has_many :children, class_name: "::Family::Family", foreign_key: :parent_id

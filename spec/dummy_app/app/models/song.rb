@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Song < ApplicationRecord
-  has_paper_trail
+  has_motorefi_paper_trail
   attribute :name, :string
 
   # Uses an integer of seconds to hold the length of the song

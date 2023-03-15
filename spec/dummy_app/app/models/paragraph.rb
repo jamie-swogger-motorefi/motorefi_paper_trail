@@ -3,5 +3,5 @@
 class Paragraph < ApplicationRecord
   belongs_to :section
 
-  has_paper_trail
+  has_motorefi_paper_trail
 end

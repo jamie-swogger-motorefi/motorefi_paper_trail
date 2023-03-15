@@ -6,13 +6,13 @@ RSpec.describe "Articles management", type: :request, order: :defined do
   let(:valid_params) { { article: { title: "Doh", content: FFaker::Lorem.sentence } } }
 
   context "with versioning disabled" do
-    specify { expect(PaperTrail).not_to be_enabled }
+    specify { expect(MotorefiPaperTrail).not_to be_enabled }
 
     it "does not create a version" do
-      expect(PaperTrail.request).to be_enabled
+      expect(MotorefiPaperTrail.request).to be_enabled
       expect {
         post articles_path, params: valid_params
-      }.not_to change(PaperTrail::Version, :count)
+      }.not_to change(MotorefiPaperTrail::Version, :count)
     end
   end
 
@@ -23,9 +23,9 @@ RSpec.describe "Articles management", type: :request, order: :defined do
       it "sets that value as the `whodunnit`" do
         expect {
           post articles_path, params: valid_params
-        }.to change(PaperTrail::Version, :count).by(1)
+        }.to change(MotorefiPaperTrail::Version, :count).by(1)
         expect(article.title).to eq("Doh")
-        expect(article.versions.last.whodunnit).to eq("foobar")
+        expect(article.motorefi_versions.last.whodunnit).to eq("foobar")
       end
     end
   end

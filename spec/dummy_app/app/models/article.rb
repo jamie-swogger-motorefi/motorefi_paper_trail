@@ -2,7 +2,7 @@
 
 # Demonstrates the `only` and `ignore` attributes, among other things.
 class Article < ApplicationRecord
-  has_paper_trail(
+  has_motorefi_paper_trail(
     ignore: [
       :title, {
         abstract: proc { |obj|

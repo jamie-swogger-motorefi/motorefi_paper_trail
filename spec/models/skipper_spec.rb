@@ -14,7 +14,7 @@ RSpec.describe Skipper, type: :model, versioning: true do
         skipper = described_class.create!(another_timestamp: t1)
         expect {
           skipper.update!(another_timestamp: t2)
-        }.not_to(change { skipper.versions.length })
+        }.not_to(change { skipper.motorefi_versions.length })
       end
     end
   end
@@ -28,28 +28,28 @@ RSpec.describe Skipper, type: :model, versioning: true do
         skipper = described_class.create!(another_timestamp: t1)
         expect {
           skipper.touch(:another_timestamp, time: t2)
-        }.not_to(change { skipper.versions.length })
+        }.not_to(change { skipper.motorefi_versions.length })
       end
 
       it "does not create a version for ignored attributes" do
         skipper = described_class.create!(created_at: t1)
         expect {
           skipper.touch(:created_at, time: t2)
-        }.not_to(change { skipper.versions.length })
+        }.not_to(change { skipper.motorefi_versions.length })
       end
     else
       it "creates a version even for skipped attributes" do
         skipper = described_class.create!(another_timestamp: t1)
         expect {
           skipper.touch(:another_timestamp, time: t2)
-        }.to(change { skipper.versions.length })
+        }.to(change { skipper.motorefi_versions.length })
       end
 
       it "creates a version even for ignored attributes" do
         skipper = described_class.create!(created_at: t1)
         expect {
           skipper.touch(:created_at, time: t2)
-        }.to(change { skipper.versions.length })
+        }.to(change { skipper.motorefi_versions.length })
       end
     end
 
@@ -57,7 +57,7 @@ RSpec.describe Skipper, type: :model, versioning: true do
       skipper = described_class.create!
       expect {
         skipper.touch
-      }.to(change { skipper.versions.length })
+      }.to(change { skipper.motorefi_versions.length })
     end
   end
 
@@ -69,7 +69,7 @@ RSpec.describe Skipper, type: :model, versioning: true do
       it "has no timestamp" do
         skipper = described_class.create!(another_timestamp: t1)
         skipper.update!(another_timestamp: t2, name: "Foobar")
-        skipper = skipper.versions.last.reify
+        skipper = skipper.motorefi_versions.last.reify
         expect(skipper.another_timestamp).to be(nil)
       end
     end
@@ -78,7 +78,7 @@ RSpec.describe Skipper, type: :model, versioning: true do
       it "preserves its timestamp" do
         skipper = described_class.create!(another_timestamp: t1)
         skipper.update!(another_timestamp: t2, name: "Foobar")
-        skipper = skipper.versions.last.reify(unversioned_attributes: :preserve)
+        skipper = skipper.motorefi_versions.last.reify(unversioned_attributes: :preserve)
         expect(skipper.another_timestamp).to eq(t2)
       end
     end

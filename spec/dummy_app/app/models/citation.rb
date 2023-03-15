@@ -3,5 +3,5 @@
 class Citation < ApplicationRecord
   belongs_to :quotation
 
-  has_paper_trail
+  has_motorefi_paper_trail
 end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Specify here only version constraints that differ from
-# `paper_trail.gemspec`.
+# `motorefi_paper_trail.gemspec`.
 #
 # > The dependencies in your Appraisals file are combined with dependencies in
 # > your Gemfile, so you don't need to repeat anything that's the same for each

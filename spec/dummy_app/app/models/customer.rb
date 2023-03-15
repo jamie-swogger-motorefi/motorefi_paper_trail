@@ -2,5 +2,5 @@
 
 class Customer < ApplicationRecord
   has_many :orders, dependent: :destroy
-  has_paper_trail
+  has_motorefi_paper_trail
 end

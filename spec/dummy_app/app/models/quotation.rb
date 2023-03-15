@@ -3,5 +3,5 @@
 class Quotation < ApplicationRecord
   belongs_to :chapter
   has_many :citations, dependent: :destroy
-  has_paper_trail
+  has_motorefi_paper_trail
 end

@@ -15,20 +15,20 @@ require "spec_helper"
     customer1.destroy
     customer2.destroy
 
-    # All versions end up with an `item_type` of Customer
+    # All motorefi_versions end up with an `item_type` of Customer
     expect(
-      PaperTrail::Version.where(item_type: "Customer").count
+      MotorefiPaperTrail::Version.where(item_type: "Customer").count
     ).to eq(6)
     expect(
-      PaperTrail::Version.where(item_type: "Management").count
+      MotorefiPaperTrail::Version.where(item_type: "Management").count
     ).to eq(0)
 
     # The item_subtype, on the other hand, is 3 and 3
     expect(
-      PaperTrail::Version.where(item_subtype: "Customer").count
+      MotorefiPaperTrail::Version.where(item_subtype: "Customer").count
     ).to eq(3)
     expect(
-      PaperTrail::Version.where(item_subtype: "Management").count
+      MotorefiPaperTrail::Version.where(item_subtype: "Management").count
     ).to eq(3)
   end
 end

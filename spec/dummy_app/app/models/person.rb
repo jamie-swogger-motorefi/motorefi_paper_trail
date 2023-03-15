@@ -16,7 +16,7 @@ class Person < ApplicationRecord
 
   belongs_to :mentor, class_name: "Person", optional: true
 
-  has_paper_trail
+  has_motorefi_paper_trail
 
   # Convert strings to TimeZone objects when assigned
   def time_zone=(value)

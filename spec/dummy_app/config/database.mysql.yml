@@ -1,7 +1,7 @@
 test: &test
   adapter: mysql2
   encoding: utf8
-  database: <%= ENV.fetch('PT_CI_DATABASE', 'paper_trail') %>_test
+  database: <%= ENV.fetch('PT_CI_DATABASE', 'motorefi_paper_trail') %>_test
   pool: 5
   username: <%= ENV.fetch('PT_CI_DB_USER', 'root') %>
   host: <%= ENV.fetch('PT_CI_DB_HOST', 'localhost') %>

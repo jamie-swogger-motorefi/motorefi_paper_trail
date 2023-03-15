@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Thing < ApplicationRecord
-  has_paper_trail versions: {
+  has_motorefi_paper_trail motorefi_versions: {
     scope: -> { order("id desc") },
     extend: PrefixVersionsInspectWithCount
   }

@@ -18,7 +18,7 @@ RSpec.describe Person, type: :model, versioning: true do
     it "version.object_changes should store long serialization of TimeZone object" do
       person = described_class.new(time_zone: "Samoa")
       person.save!
-      len = person.versions.last.object_changes.length
+      len = person.motorefi_versions.last.object_changes.length
       expect((len < 105)).to(be_truthy)
     end
 
@@ -26,7 +26,7 @@ RSpec.describe Person, type: :model, versioning: true do
       person = described_class.new(time_zone: "Samoa")
       person.save!
       as_stored_in_version = HashWithIndifferentAccess[
-        YAML.load(person.versions.last.object_changes)
+        YAML.load(person.motorefi_versions.last.object_changes)
       ]
       expect(as_stored_in_version[:time_zone]).to(eq([nil, "Samoa"]))
       serialized_value = Person::TimeZoneSerializer.dump(person.time_zone)
@@ -37,7 +37,7 @@ RSpec.describe Person, type: :model, versioning: true do
       person = described_class.new(time_zone: "Samoa")
       person.save!
       unserialized_value = Person::TimeZoneSerializer.load(person.time_zone)
-      expect(person.versions.last.changeset[:time_zone].last).to(eq(unserialized_value))
+      expect(person.motorefi_versions.last.changeset[:time_zone].last).to(eq(unserialized_value))
     end
 
     it "record.changes (before save) returns the original, unserialized values" do
@@ -53,9 +53,9 @@ RSpec.describe Person, type: :model, versioning: true do
       person = described_class.new(time_zone: "Samoa")
       changes_before_save = person.changes.dup
       person.save!
-      actual = person.versions.last.changeset.delete_if { |k, _v| (k.to_sym == :id) }
+      actual = person.motorefi_versions.last.changeset.delete_if { |k, _v| (k.to_sym == :id) }
       expect(actual).to(eq(changes_before_save))
-      actual = person.versions.last.changeset[:time_zone].map(&:class)
+      actual = person.motorefi_versions.last.changeset[:time_zone].map(&:class)
       expect(actual).to(eq([NilClass, ActiveSupport::TimeZone]))
     end
 
@@ -65,7 +65,7 @@ RSpec.describe Person, type: :model, versioning: true do
         person.save!
         person.assign_attributes(time_zone: "Pacific Time (US & Canada)")
         person.save!
-        len = person.versions.last.object.length
+        len = person.motorefi_versions.last.object.length
         expect((len < 105)).to(be_truthy)
       end
 
@@ -74,7 +74,7 @@ RSpec.describe Person, type: :model, versioning: true do
         person.save!
         person.assign_attributes(time_zone: "Pacific Time (US & Canada)")
         person.save!
-        len = person.versions.last.object_changes.length
+        len = person.motorefi_versions.last.object_changes.length
         expect(len < 118).to eq(true)
       end
 
@@ -85,7 +85,7 @@ RSpec.describe Person, type: :model, versioning: true do
         person.assign_attributes(time_zone: "Pacific Time (US & Canada)")
         person.save!
         as_stored_in_version = HashWithIndifferentAccess[
-          YAML.load(person.versions.last.object)
+          YAML.load(person.motorefi_versions.last.object)
         ]
         expect(as_stored_in_version[:time_zone]).to(eq("Samoa"))
         serialized_value = Person::TimeZoneSerializer.dump(attribute_value_before_change)
@@ -98,7 +98,7 @@ RSpec.describe Person, type: :model, versioning: true do
         person.assign_attributes(time_zone: "Pacific Time (US & Canada)")
         person.save!
         as_stored_in_version = HashWithIndifferentAccess[
-          YAML.load(person.versions.last.object_changes)
+          YAML.load(person.motorefi_versions.last.object_changes)
         ]
         expect(as_stored_in_version[:time_zone]).to(eq(["Samoa", "Pacific Time (US & Canada)"]))
         serialized_value = Person::TimeZoneSerializer.dump(person.time_zone)
@@ -112,7 +112,7 @@ RSpec.describe Person, type: :model, versioning: true do
         person.assign_attributes(time_zone: "Pacific Time (US & Canada)")
         person.save!
         unserialized_value = Person::TimeZoneSerializer.load(attribute_value_before_change)
-        expect(person.versions.last.reify.time_zone).to(eq(unserialized_value))
+        expect(person.motorefi_versions.last.reify.time_zone).to(eq(unserialized_value))
       end
 
       it "version.changeset should convert attribute to original, unserialized value" do
@@ -121,7 +121,7 @@ RSpec.describe Person, type: :model, versioning: true do
         person.assign_attributes(time_zone: "Pacific Time (US & Canada)")
         person.save!
         unserialized_value = Person::TimeZoneSerializer.load(person.time_zone)
-        expect(person.versions.last.changeset[:time_zone].last).to(eq(unserialized_value))
+        expect(person.motorefi_versions.last.changeset[:time_zone].last).to(eq(unserialized_value))
       end
 
       it "record.changes (before save) returns the original, unserialized values" do
@@ -141,9 +141,9 @@ RSpec.describe Person, type: :model, versioning: true do
         person.assign_attributes(time_zone: "Pacific Time (US & Canada)")
         changes_before_save = person.changes.dup
         person.save!
-        expect(person.versions.last.changeset).to(eq(changes_before_save))
+        expect(person.motorefi_versions.last.changeset).to(eq(changes_before_save))
         expect(
-          person.versions.last.changeset[:time_zone].map(&:class)
+          person.motorefi_versions.last.changeset[:time_zone].map(&:class)
         ).to(eq([ActiveSupport::TimeZone, ActiveSupport::TimeZone]))
       end
     end
@@ -163,15 +163,15 @@ RSpec.describe Person, type: :model, versioning: true do
       bicycle.update(name: "BMX 2.0")
       person.update(name: "Peter")
 
-      expect(person.reload.versions.length).to(eq(3))
+      expect(person.reload.motorefi_versions.length).to(eq(3))
 
       # These will work when PT-AT adds support for the new `item_subtype` column
       #
-      # - https://github.com/westonganger/paper_trail-association_tracking/pull/5
-      # - https://github.com/paper-trail-gem/paper_trail/pull/1143
-      # - https://github.com/paper-trail-gem/paper_trail/issues/594
+      # - https://github.com/westonganger/motorefi_paper_trail-association_tracking/pull/5
+      # - https://github.com/motorefi-paper-trail-gem/motorefi_paper_trail/pull/1143
+      # - https://github.com/motorefi-paper-trail-gem/motorefi_paper_trail/issues/594
       #
-      # second_version = person.reload.versions.second.reify(has_one: true)
+      # second_version = person.reload.motorefi_versions.second.reify(has_one: true)
       # expect(second_version.car.name).to(eq("BMW 325"))
       # expect(second_version.bicycle.name).to(eq("BMX 1.0"))
     end

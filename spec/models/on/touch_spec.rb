@@ -8,7 +8,7 @@ module On
     describe "#create" do
       it "does not create a version" do
         record = described_class.create(name: "Alice")
-        expect(record.versions.count).to eq(0)
+        expect(record.motorefi_versions.count).to eq(0)
       end
     end
 
@@ -16,15 +16,15 @@ module On
       it "creates a version" do
         record = described_class.create(name: "Alice")
         expect { record.touch }.to(
-          change { record.versions.count }.by(+1)
+          change { record.motorefi_versions.count }.by(+1)
         )
-        expect(record.versions.last.event).to eq("update")
+        expect(record.motorefi_versions.last.event).to eq("update")
       end
 
       it "saves a object" do
         record = described_class.create(name: "Alice")
         record.touch
-        expect(record.versions.last.reify.name).to eq("Alice")
+        expect(record.motorefi_versions.last.reify.name).to eq("Alice")
       end
     end
 
@@ -32,7 +32,7 @@ module On
       it "does not create a version" do
         record = described_class.create(name: "Alice")
         record.update(name: "Andrew")
-        expect(record.versions.count).to eq(0)
+        expect(record.motorefi_versions.count).to eq(0)
       end
     end
   end

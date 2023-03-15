@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
 class AbstractVersion < ApplicationRecord
-  include PaperTrail::VersionConcern
+  include MotorefiPaperTrail::VersionConcern
   self.abstract_class = true
 end

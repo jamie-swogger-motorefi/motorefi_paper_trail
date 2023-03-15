@@ -21,10 +21,10 @@ RSpec.describe Plant, type: :model, versioning: true do
     tomato = Tomato.create
     tomato.destroy
 
-    reified = plant.versions.last.reify
+    reified = plant.motorefi_versions.last.reify
     expect(reified.class).to eq(described_class)
 
-    reified = tomato.versions.last.reify
+    reified = tomato.motorefi_versions.last.reify
     expect(reified.class).to eq(Tomato)
   end
 end
